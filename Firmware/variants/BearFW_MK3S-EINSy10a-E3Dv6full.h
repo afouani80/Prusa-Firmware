@@ -19,7 +19,7 @@
 #define DEVELOPER
 
 // Printer name
-#define CUSTOM_MENDEL_NAME "Prusa i3 MK3S"
+#define CUSTOM_MENDEL_NAME "Prusa i3 MK3S BEAR"
 
 // Electronics
 #define MOTHERBOARD BOARD_EINSY_1_0a
@@ -27,7 +27,7 @@
 #define HAS_SECOND_SERIAL_PORT
 
 // PSU
-#define PSU_Delta                                 // uncomment if DeltaElectronics PSU installed
+//#define PSU_Delta                                // uncomment if DeltaElectronics PSU installed
 
 
 // Uncomment the below for the E3D PT100 temperature sensor (with or without PT100 Amplifier)
@@ -71,6 +71,16 @@
 #define Y_MIN_POS -4 //orig -4
 #define Z_MAX_POS 210
 #define Z_MIN_POS 0.15
+
+// Uncomment Z_MAX_POS_XYZ_CALIBRATION_CORRECTION define for using the MK3S and MK2.5S firmware 
+//                                                in combination with an extruder different from Prusa.
+//                                                -or-
+//                                                when the printer is an MK3
+//                                                The Prusa settings only seem correct for MK3 and MK3S firmware.
+//
+//                                                The correct value for a MK3S extruder is 9.0, for all other printers choose 2.0.
+// This is only relevant for "S" firmware and an extruder like the Bondtech BMG or Bear extruders.
+#define Z_MAX_POS_XYZ_CALIBRATION_CORRECTION 2.0 // This represents the correction as needed for MK3S extruder
 
 // Canceled home position
 #define X_CANCEL_POS 50
@@ -319,7 +329,7 @@
 #endif
 #define SUPERPINDA_SUPPORT
 #define PINDA_MINTEMP 10
-//#define PINDA_TEMP_COMP //Used to enable SuperPINDA toggle menu/function
+#define PINDA_TEMP_COMP //Used to enable SuperPINDA toggle menu/function
 #define AMBIENT_MINTEMP -30
 
 // Maxtemps
@@ -358,7 +368,7 @@
 #define EXTRUDER_AUTO_FAN_TEMPERATURE 50
 #define EXTRUDER_AUTO_FAN_SPEED   255  // == full speed
 #define EXTRUDER_ALTFAN_DETECT
-#define EXTRUDER_ALTFAN_SPEED_SILENT 128
+#define EXTRUDER_ALTFAN_SPEED_SILENT 255
 
 
 
