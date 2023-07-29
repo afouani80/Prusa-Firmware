@@ -163,7 +163,6 @@ set(FW_SOURCES
     optiboot_xflash.cpp
     pat9125.cpp
     planner.cpp
-    power_panic.cpp
     Prusa_farm.cpp
     qr_solve.cpp
     rbuf.c
@@ -501,9 +500,10 @@ if(CMAKE_CROSSCOMPILING)
     endif()
 
     message("Variant added: ${THIS_VAR}")
+    string(REPLACE "-E3Dv6full" "" DIR_NAME "${THIS_VAR}")
+    string(REPLACE "1_75mm_" "" DIR_NAME "${DIR_NAME}")
 
     # Generate a file in a subfolder so that we can organize things a little more neatly in VS code
-    set(DIR_NAME ${THIS_VAR})
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build_gen/${DIR_NAME})
     file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/build_gen/${DIR_NAME}/CMakeLists.txt
          "project(${DIR_NAME})\nfw_add_variant(${THIS_VAR})"

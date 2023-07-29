@@ -1,12 +1,12 @@
 //backlight.cpp
-#include <Arduino.h>
-#include <avr/eeprom.h>
+
 #include "backlight.h"
-#include "eeprom.h"
-#include "fastio.h"
 #include "macros.h"
+#include <avr/eeprom.h>
+#include <Arduino.h>
+#include "eeprom.h"
 #include "pins.h"
-#include "system_timer.h"
+#include "fastio.h"
 #include "Timer.h"
 
 #ifdef LCD_BL_PIN

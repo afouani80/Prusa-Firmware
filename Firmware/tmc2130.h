@@ -2,10 +2,11 @@
 #define TMC2130_H
 
 #include <stdint.h>
-#include "Configuration_var.h"
 
 //mode
 extern uint8_t tmc2130_mode;
+extern uint8_t tmc2130_current_h[4];
+extern uint8_t tmc2130_current_r[4];
 //microstep resolution (0 means 256usteps, 8 means 1ustep
 extern uint8_t tmc2130_mres[4];
 
@@ -57,20 +58,7 @@ typedef struct
 } tmc2130_chopper_config_t;
 #pragma pack(pop)
 
-extern tmc2130_chopper_config_t tmc2130_chopper_config[NUM_AXIS];
-
-struct MotorCurrents {
-    bool vSense; ///< VSense current scaling
-    uint8_t iRun; ///< Running current
-    uint8_t iHold; ///< Holding current
-
-    constexpr inline __attribute__((always_inline)) MotorCurrents(uint8_t ir, uint8_t ih)
-        : vSense((ir < 32) ? 1 : 0)
-        , iRun((ir < 32) ? ir : (ir >> 1))
-        , iHold((ir < 32) ? ih : (ih >> 1)) {}
-};
-
-extern MotorCurrents currents[NUM_AXIS];
+extern tmc2130_chopper_config_t tmc2130_chopper_config[4];
 
 //initialize tmc2130
 
@@ -106,7 +94,7 @@ extern void tmc2130_sg_measure_start(uint8_t axis);
 //stop current stallguard measuring and report result
 extern uint16_t tmc2130_sg_measure_stop();
 
-extern void tmc2130_setup_chopper(uint8_t axis, uint8_t mres);
+extern void tmc2130_setup_chopper(uint8_t axis, uint8_t mres, uint8_t current_h, uint8_t current_r);
 
 //set holding current for any axis (M911)
 extern void tmc2130_set_current_h(uint8_t axis, uint8_t current);
@@ -139,7 +127,7 @@ extern void tmc2130_set_dir(uint8_t axis, uint8_t dir);
 extern void tmc2130_do_step(uint8_t axis);
 extern void tmc2130_do_steps(uint8_t axis, uint16_t steps, uint8_t dir, uint16_t delay_us);
 extern void tmc2130_goto_step(uint8_t axis, uint8_t step, uint8_t dir, uint16_t delay_us, uint16_t microstep_resolution);
-extern void tmc2130_get_wave(uint8_t axis, uint8_t* data);
+extern void tmc2130_get_wave(uint8_t axis, uint8_t* data, FILE* stream);
 extern void tmc2130_set_wave(uint8_t axis, uint8_t amp, uint8_t fac1000);
 
 extern bool tmc2130_home_calibrate(uint8_t axis);

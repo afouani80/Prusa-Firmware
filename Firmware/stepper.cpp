@@ -26,6 +26,7 @@
 #include "planner.h"
 #include "temperature.h"
 #include "ultralcd.h"
+#include "language.h"
 #include "cardreader.h"
 #include "speed_lookuptable.h"
 #if defined(DIGIPOTSS_PIN) && DIGIPOTSS_PIN > -1
@@ -36,7 +37,10 @@
 #endif //TMC2130
 
 #include "Filament_sensor.h"
+
+#include "mmu2.h"
 #include "ConfigurationStore.h"
+
 #include "Prusa_farm.h"
 
 #ifdef DEBUG_STACK_MONITOR
@@ -192,15 +196,15 @@ void checkHitEndstops()
    SERIAL_ECHO_START;
    SERIAL_ECHORPGM(MSG_ENDSTOPS_HIT);
    if(endstop_hit & _BV(X_AXIS)) {
-     SERIAL_ECHOPAIR(" X:",(float)endstops_trigsteps[X_AXIS]/cs.axis_steps_per_mm[X_AXIS]);
+     SERIAL_ECHOPAIR(" X:",(float)endstops_trigsteps[X_AXIS]/cs.axis_steps_per_unit[X_AXIS]);
 //     LCD_MESSAGERPGM(CAT2((MSG_ENDSTOPS_HIT), PSTR("X")));
    }
    if(endstop_hit & _BV(Y_AXIS)) {
-     SERIAL_ECHOPAIR(" Y:",(float)endstops_trigsteps[Y_AXIS]/cs.axis_steps_per_mm[Y_AXIS]);
+     SERIAL_ECHOPAIR(" Y:",(float)endstops_trigsteps[Y_AXIS]/cs.axis_steps_per_unit[Y_AXIS]);
 //     LCD_MESSAGERPGM(CAT2((MSG_ENDSTOPS_HIT), PSTR("Y")));
    }
    if(endstop_hit & _BV(Z_AXIS)) {
-     SERIAL_ECHOPAIR(" Z:",(float)endstops_trigsteps[Z_AXIS]/cs.axis_steps_per_mm[Z_AXIS]);
+     SERIAL_ECHOPAIR(" Z:",(float)endstops_trigsteps[Z_AXIS]/cs.axis_steps_per_unit[Z_AXIS]);
 //     LCD_MESSAGERPGM(CAT2((MSG_ENDSTOPS_HIT),PSTR("Z")));
    }
    SERIAL_ECHOLN("");
@@ -324,7 +328,7 @@ FORCE_INLINE void stepper_next_block()
   current_block = plan_get_current_block();
   if (current_block != NULL) {
 #ifdef BACKLASH_X
-	if (current_block->steps[X_AXIS].wide)
+	if (current_block->steps_x.wide)
 	{ //X-axis movement
 		if ((current_block->direction_bits ^ last_dir_bits) & 1)
 		{
@@ -347,7 +351,7 @@ FORCE_INLINE void stepper_next_block()
 	}
 #endif
 #ifdef BACKLASH_Y
-	if (current_block->steps[Y_AXIS].wide)
+	if (current_block->steps_y.wide)
 	{ //Y-axis movement
 		if ((current_block->direction_bits ^ last_dir_bits) & 2)
 		{
@@ -401,7 +405,7 @@ FORCE_INLINE void stepper_next_block()
       counter_z.lo = counter_x.lo;
       counter_e.lo = counter_x.lo;
 #ifdef LIN_ADVANCE
-      e_extruding = current_block->steps[E_AXIS].lo != 0;
+      e_extruding = current_block->steps_e.lo != 0;
 #endif
     } else {
       counter_x.wide = -(current_block->step_event_count.wide >> 1);
@@ -409,7 +413,7 @@ FORCE_INLINE void stepper_next_block()
       counter_z.wide = counter_x.wide;
       counter_e.wide = counter_x.wide;
 #ifdef LIN_ADVANCE
-      e_extruding = current_block->steps[E_AXIS].wide != 0;
+      e_extruding = current_block->steps_e.wide != 0;
 #endif
     }
     step_events_completed.wide = 0;
@@ -488,7 +492,7 @@ FORCE_INLINE void stepper_check_endstops()
         // Normal homing
         SET_BIT_TO(_endstop, X_AXIS, (READ(X_MIN_PIN) != X_MIN_ENDSTOP_INVERTING));
       #endif
-        if((_endstop & _old_endstop & _BV(X_AXIS)) && (current_block->steps[X_AXIS].wide > 0)) {
+        if((_endstop & _old_endstop & _BV(X_AXIS)) && (current_block->steps_x.wide > 0)) {
 #ifdef VERBOSE_CHECK_HIT_ENDSTOPS
           endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
 #endif //VERBOSE_CHECK_HIT_ENDSTOPS
@@ -505,7 +509,7 @@ FORCE_INLINE void stepper_check_endstops()
         // Normal homing
           SET_BIT_TO(_endstop, X_AXIS + 4, (READ(X_MAX_PIN) != X_MAX_ENDSTOP_INVERTING));
         #endif
-        if((_endstop & _old_endstop & _BV(X_AXIS + 4)) && (current_block->steps[X_AXIS].wide > 0)){
+        if((_endstop & _old_endstop & _BV(X_AXIS + 4)) && (current_block->steps_x.wide > 0)){
 #ifdef VERBOSE_CHECK_HIT_ENDSTOPS
           endstops_trigsteps[X_AXIS] = count_position[X_AXIS];
 #endif //VERBOSE_CHECK_HIT_ENDSTOPS
@@ -529,7 +533,7 @@ FORCE_INLINE void stepper_check_endstops()
       // Normal homing
         SET_BIT_TO(_endstop, Y_AXIS, (READ(Y_MIN_PIN) != Y_MIN_ENDSTOP_INVERTING));
       #endif
-        if((_endstop & _old_endstop & _BV(Y_AXIS)) && (current_block->steps[Y_AXIS].wide > 0)) {
+        if((_endstop & _old_endstop & _BV(Y_AXIS)) && (current_block->steps_y.wide > 0)) {
 #ifdef VERBOSE_CHECK_HIT_ENDSTOPS
           endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
 #endif //VERBOSE_CHECK_HIT_ENDSTOPS
@@ -546,7 +550,7 @@ FORCE_INLINE void stepper_check_endstops()
         // Normal homing
           SET_BIT_TO(_endstop, Y_AXIS + 4, (READ(Y_MAX_PIN) != Y_MAX_ENDSTOP_INVERTING));
         #endif
-        if((_endstop & _old_endstop & _BV(Y_AXIS + 4)) && (current_block->steps[Y_AXIS].wide > 0)){
+        if((_endstop & _old_endstop & _BV(Y_AXIS + 4)) && (current_block->steps_y.wide > 0)){
 #ifdef VERBOSE_CHECK_HIT_ENDSTOPS
           endstops_trigsteps[Y_AXIS] = count_position[Y_AXIS];
 #endif //VERBOSE_CHECK_HIT_ENDSTOPS
@@ -571,7 +575,7 @@ FORCE_INLINE void stepper_check_endstops()
         #else
           SET_BIT_TO(_endstop, Z_AXIS, (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING));
         #endif //TMC2130_SG_HOMING
-        if((_endstop & _old_endstop & _BV(Z_AXIS)) && (current_block->steps[Z_AXIS].wide > 0)) {
+        if((_endstop & _old_endstop & _BV(Z_AXIS)) && (current_block->steps_z.wide > 0)) {
 #ifdef VERBOSE_CHECK_HIT_ENDSTOPS
           endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
 #endif //VERBOSE_CHECK_HIT_ENDSTOPS
@@ -593,7 +597,7 @@ FORCE_INLINE void stepper_check_endstops()
         #else
         SET_BIT_TO(_endstop, Z_AXIS + 4, (READ(Z_MAX_PIN) != Z_MAX_ENDSTOP_INVERTING));
         #endif //TMC2130_SG_HOMING
-        if((_endstop & _old_endstop & _BV(Z_AXIS + 4)) && (current_block->steps[Z_AXIS].wide > 0)) {
+        if((_endstop & _old_endstop & _BV(Z_AXIS + 4)) && (current_block->steps_z.wide > 0)) {
 #ifdef VERBOSE_CHECK_HIT_ENDSTOPS
           endstops_trigsteps[Z_AXIS] = count_position[Z_AXIS];
 #endif //VERBOSE_CHECK_HIT_ENDSTOPS
@@ -646,7 +650,7 @@ FORCE_INLINE void stepper_tick_lowres()
   for (uint8_t i=0; i < step_loops; ++ i) { // Take multiple steps per interrupt (For high speed moves)
     MSerial.checkRx(); // Check for serial chars.
     // Step in X axis
-    counter_x.lo += current_block->steps[X_AXIS].lo;
+    counter_x.lo += current_block->steps_x.lo;
     if (counter_x.lo > 0) {
       STEP_NC_HI(X_AXIS);
 #ifdef DEBUG_XSTEP_DUP_PIN
@@ -660,7 +664,7 @@ FORCE_INLINE void stepper_tick_lowres()
 #endif //DEBUG_XSTEP_DUP_PIN
     }
     // Step in Y axis
-    counter_y.lo += current_block->steps[Y_AXIS].lo;
+    counter_y.lo += current_block->steps_y.lo;
     if (counter_y.lo > 0) {
       STEP_NC_HI(Y_AXIS);
 #ifdef DEBUG_YSTEP_DUP_PIN
@@ -674,7 +678,7 @@ FORCE_INLINE void stepper_tick_lowres()
 #endif //DEBUG_YSTEP_DUP_PIN    
     }
     // Step in Z axis
-    counter_z.lo += current_block->steps[Z_AXIS].lo;
+    counter_z.lo += current_block->steps_z.lo;
     if (counter_z.lo > 0) {
       STEP_NC_HI(Z_AXIS);
       counter_z.lo -= current_block->step_event_count.lo;
@@ -682,7 +686,7 @@ FORCE_INLINE void stepper_tick_lowres()
       STEP_NC_LO(Z_AXIS);
     }
     // Step in E axis
-    counter_e.lo += current_block->steps[E_AXIS].lo;
+    counter_e.lo += current_block->steps_e.lo;
     if (counter_e.lo > 0) {
 #ifndef LIN_ADVANCE
       STEP_NC_HI(E_AXIS);
@@ -708,7 +712,7 @@ FORCE_INLINE void stepper_tick_highres()
   for (uint8_t i=0; i < step_loops; ++ i) { // Take multiple steps per interrupt (For high speed moves)
     MSerial.checkRx(); // Check for serial chars.
     // Step in X axis
-    counter_x.wide += current_block->steps[X_AXIS].wide;
+    counter_x.wide += current_block->steps_x.wide;
     if (counter_x.wide > 0) {
       STEP_NC_HI(X_AXIS);
 #ifdef DEBUG_XSTEP_DUP_PIN
@@ -722,7 +726,7 @@ FORCE_INLINE void stepper_tick_highres()
 #endif //DEBUG_XSTEP_DUP_PIN
     }
     // Step in Y axis
-    counter_y.wide += current_block->steps[Y_AXIS].wide;
+    counter_y.wide += current_block->steps_y.wide;
     if (counter_y.wide > 0) {
       STEP_NC_HI(Y_AXIS);
 #ifdef DEBUG_YSTEP_DUP_PIN
@@ -736,7 +740,7 @@ FORCE_INLINE void stepper_tick_highres()
 #endif //DEBUG_YSTEP_DUP_PIN    
     }
     // Step in Z axis
-    counter_z.wide += current_block->steps[Z_AXIS].wide;
+    counter_z.wide += current_block->steps_z.wide;
     if (counter_z.wide > 0) {
       STEP_NC_HI(Z_AXIS);
       counter_z.wide -= current_block->step_event_count.wide;
@@ -744,7 +748,7 @@ FORCE_INLINE void stepper_tick_highres()
       STEP_NC_LO(Z_AXIS);
     }
     // Step in E axis
-    counter_e.wide += current_block->steps[E_AXIS].wide;
+    counter_e.wide += current_block->steps_e.wide;
     if (counter_e.wide > 0) {
 #ifndef LIN_ADVANCE
       STEP_NC_HI(E_AXIS);
@@ -863,7 +867,7 @@ FORCE_INLINE void isr() {
             step_rate = acc_step_rate - step_rate; // Decelerate from acceleration end point.
 
             // lower limit
-            if (step_rate < uint16_t(current_block->final_rate))
+            if (step_rate < current_block->final_rate)
                 step_rate = uint16_t(current_block->final_rate);
         }
 
@@ -1309,15 +1313,18 @@ void st_synchronize()
 	}
 }
 
-void st_set_position(const long *pos)
+void st_set_position(const long &x, const long &y, const long &z, const long &e)
 {
   CRITICAL_SECTION_START;
   // Copy 4x4B.
-  // This block locks the interrupts globally for 2.06 us,
-  // which corresponds to a maximum repeat frequency of ~484kHz.
+  // This block locks the interrupts globally for 4.56 us,
+  // which corresponds to a maximum repeat frequency of 219.18 kHz.
   // This blocking is safe in the context of a 10kHz stepper driver interrupt
   // or a 115200 Bd serial line receive interrupt, which will not trigger faster than 12kHz.
-  memcpy((long *)count_position, pos, sizeof(count_position));
+  count_position[X_AXIS] = x;
+  count_position[Y_AXIS] = y;
+  count_position[Z_AXIS] = z;
+  count_position[E_AXIS] = e;
   CRITICAL_SECTION_END;
 }
 
@@ -1348,7 +1355,7 @@ void st_get_position_xy(long &x, long &y)
 float st_get_position_mm(uint8_t axis)
 {
   float steper_position_in_steps = st_get_position(axis);
-  return steper_position_in_steps / cs.axis_steps_per_mm[axis];
+  return steper_position_in_steps / cs.axis_steps_per_unit[axis];
 }
 
 

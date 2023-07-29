@@ -1,12 +1,11 @@
-#include <Arduino.h>
-#include "backlight.h"
-#include "eeprom.h"
-#include "fastio.h"
-#include "pins.h"
 #include "sound.h"
-#include "system_timer.h"
-#include "Timer.h"
 
+#include "Marlin.h"
+
+//#include <inttypes.h>
+//#include <avr/eeprom.h>
+//#include "eeprom.h"
+#include "backlight.h"
 
 
 //eSOUND_MODE eSoundMode=e_SOUND_MODE_LOUD;

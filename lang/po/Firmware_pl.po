@@ -2631,3 +2631,6 @@ msgstr "Pojawił się nieoczekiwany błąd."
 
 #~ msgid "TM autotune failed"
 #~ msgstr "Blad TM autotune"
+
+#~ msgid "Temp. model autotune"
+#~ msgstr "Autotune modelu temp"

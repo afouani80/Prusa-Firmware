@@ -7,7 +7,6 @@
 #include "util.h"
 #include "ultralcd.h"
 #include "Filament_sensor.h"
-#include "language.h"
 
 #ifdef PRUSA_FARM
 uint8_t farm_mode = 0;
@@ -242,7 +241,7 @@ void prusa_statistics(uint8_t _message) {
         else if (isPrintPaused) {
             prusa_statistics_case0(14);
         }
-        else if (IS_SD_PRINTING || (eFilamentAction != FilamentAction::None)) {
+        else if (IS_SD_PRINTING || loading_flag) {
             prusa_statistics_case0(4);
         }
         else {
@@ -270,7 +269,7 @@ void prusa_statistics(uint8_t _message) {
         status_number = 3;
         farm_timer = 1;
 
-        if (IS_SD_PRINTING || (eFilamentAction != FilamentAction::None)) {
+        if (IS_SD_PRINTING || loading_flag) {
             SERIAL_ECHO('{');
             prusa_stat_printerstatus(4);
             prusa_stat_farm_number();
@@ -374,7 +373,7 @@ void prusa_statistics_update_from_status_screen() {
         switch (farm_timer) {
         case 8:
             prusa_statistics(21);
-            if(eFilamentAction != FilamentAction::None)
+            if(loading_flag)
                 prusa_statistics(22);
             break;
         case 5:

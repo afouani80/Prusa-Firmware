@@ -1,6 +1,7 @@
 /// @file
 #pragma once
 #include <stdint.h>
+#include "eeprom.h"
 
 // See documentation here: https://help.prusa3d.com/article/spooljoin-mmu2s_134252
 

@@ -11,7 +11,6 @@
 #include <catch2/internal/catch_enforce.hpp>
 #include <catch2/internal/catch_xmlwriter.hpp>
 
-#include <cstdint>
 #include <iomanip>
 #include <type_traits>
 
