@@ -309,7 +309,7 @@
 #endif
 #define SUPERPINDA_SUPPORT
 #define PINDA_MINTEMP 10
-//#define PINDA_TEMP_COMP //Used to enable SuperPINDA toggle menu/function
+#define PINDA_TEMP_COMP //Used to enable SuperPINDA toggle menu/function
 #define AMBIENT_MINTEMP -30
 
 // Maxtemps
